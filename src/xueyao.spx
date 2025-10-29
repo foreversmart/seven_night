@@ -1,0 +1,90 @@
+import (
+	"math"
+)
+
+// degToRad converts degrees to radians.
+func degToRad(d float64) float64 { return d * math.Pi / 180.0 }
+
+func radToDeg(r float64) float64 { return r * 180.0 / math.Pi }
+
+// CircleAround 已改造为支持椭圆轨迹。
+// 参数：
+//   cx, cy             - 盘旋中心坐标
+//   radiusX, radiusY   - 椭圆的半轴 a (x 方向), b (y 方向)
+//   rotationDeg        - 椭圆相对于 x 轴的旋转角（度）
+//   revolutions        - 盘旋的圈数（整数）
+//   stepsPerRevolution - 每圈划分的步数（越大越平滑）
+//   durationPerRev     - 每圈耗时（秒）
+// 说明：setHeading 接收角度（度）；glide 接收目标 x,y 与耗时（秒）。
+func CircleAround(cx, cy, radiusX, radiusY, rotationDeg float64, revolutions, stepsPerRevolution int, durationPerRev float64) {
+	if stepsPerRevolution <= 0 {
+		stepsPerRevolution = 36 // 默认每圈36步
+	}
+	if revolutions <= 0 {
+		revolutions = 1
+	}
+	if durationPerRev <= 0 {
+		durationPerRev = 2.0 // 每圈默认2秒
+	}
+
+	totalSteps := revolutions * stepsPerRevolution
+	// 每步花费的时间
+	timePerStep := durationPerRev / float64(stepsPerRevolution)
+
+	rotationRad := degToRad(rotationDeg)
+
+	// 从参数 t = start angle (rad) 开始，这里从 0 开始；若需要可扩展成入参 startAngleDeg
+	startAngleRad := 0.0
+
+	// t 的增量：每步增加的参数量（使每圈走 2π）
+	dtPerStep := 2.0 * math.Pi / float64(stepsPerRevolution)
+
+	for step := 0; step < totalSteps; step++ {
+		// 参数 t（弧度），跨多圈时 t 会累积超过 2π
+		t := startAngleRad + float64(step)*dtPerStep
+
+		// 椭圆在本地坐标系 (未旋转) 上的点和导数
+		xLocal := radiusX * math.Cos(t)
+		yLocal := radiusY * math.Sin(t)
+
+		// 导数（相对于 t）
+		dxLocal := -radiusX * math.Sin(t)
+		dyLocal := radiusY * math.Cos(t)
+
+		// 旋转椭圆（把本地坐标绕原点旋转 rotationRad），得到世界坐标
+		cosR := math.Cos(rotationRad)
+		sinR := math.Sin(rotationRad)
+
+		targetX := cx + xLocal*cosR - yLocal*sinR
+		targetY := cy + xLocal*sinR + yLocal*cosR
+
+		// 导数也要旋转得到世界坐标下的速度方向
+		dx := dxLocal*cosR - dyLocal*sinR
+		dy := dxLocal*sinR + dyLocal*cosR
+
+		// 计算朝向（单位：度），让鸟面向运动方向（速度向量的方向）
+		headingDeg := radToDeg(math.Atan2(dy, dx))
+		// 规范化到 [0,360)
+		headingDeg = math.Mod(headingDeg, 360.0)
+		if headingDeg < 0 {
+			headingDeg += 360.0
+		}
+
+		setHeading(headingDeg + 90)
+		glide(targetX, targetY, timePerStep)
+	}
+}
+
+onStart => {
+	hide
+	onMsg "start_case1", => {
+		show
+		setLayer Front
+		CircleAround(-10, 125, 180, 60, 5, 10, 100, 8)
+	}
+
+	onMsg "start_case2", => {
+		hide
+	}
+
+}

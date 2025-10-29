@@ -1,0 +1,6 @@
+onStart => {
+	Camera.setXYpos 0, 0
+	// onBackdrop "序章", => {
+	// 	changeGraphicEffect WhirlEffect, 10
+	// }
+}

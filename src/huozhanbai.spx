@@ -1,0 +1,49 @@
+onStart => {
+	hide
+	onMsg "start", => {
+		show
+		setLayer Front
+		for i := 0; i < 10; i++ {
+			animate "ride", true
+			x, y := xpos, ypos
+			glide x+50, y, 0.7
+			// newx := x + 60
+			//setXpos newx
+		}
+		stopAnimation "ride"
+		stopPlaying "大气磅礴的开场音乐2"
+		broadcast "start_case1"
+	}
+
+	onMsg "start_case1", => {
+		setSize 10*size
+		wait 0.05
+		wait 3
+		show
+		setXYpos -130, -170
+		setLayer Front
+		print("huozhanbai:", size)
+
+		setCostume "持剑迎击1"
+		for i := 0; i < 10; i++ {
+			x, y := xpos, ypos
+			glide x, y+9, 0.2
+		}
+
+		//wait 1
+		play "刀剑打斗金属声音", true
+		for i := 0; i < 30; i++ {
+			animate "fight", true
+			x, y := xpos, ypos
+			glide x+0.2, y, 0.5
+		}
+		stopPlaying "刀剑打斗金属声音"
+		stopAnimation "fight"
+		setCostume "攻击定格"
+		play "环境音风雪低沉的呼啸声极度静谧感"
+		wait 1
+		hide
+		// setSize size/8
+		broadcast "start_case2"
+	}
+}

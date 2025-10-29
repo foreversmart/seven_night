@@ -1,0 +1,12 @@
+onStart => {
+	hide
+	onMsg "start_case5", => {
+		show
+		play "音乐舒缓悲伤的钢琴或箫声", true
+		animateAndWait "animation"
+		setCostume "eye_234"
+		wait 100
+		broadcast "start_case6"
+	}
+
+}

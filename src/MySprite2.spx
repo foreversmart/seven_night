@@ -1,0 +1,11 @@
+onStart => {
+	hide
+	onMsg "start_case4", => {
+		show
+		animateAndWait "animation"
+		stopPlaying "音效心跳突然放大的咚一声"
+		hide
+		broadcast "start_case5"
+	}
+
+}
