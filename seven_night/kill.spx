@@ -1,0 +1,13 @@
+onStart => {
+	hide
+	onMsg "start_case6", => {
+		show
+        setLayer Front
+        play "音效雪鹞尖利的叫声扑翅声"
+		animateAndWait "animation"
+		hide
+		broadcast "start_case7"
+	}
+
+}
+

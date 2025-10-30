@@ -1,0 +1,7 @@
+onStart => {
+    show
+    animate "animation", true
+	onMsg "start_case1", => {
+		hide
+	}
+}

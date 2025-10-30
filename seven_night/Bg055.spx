@@ -1,0 +1,8 @@
+onStart => {
+	hide
+	onMsg "start_case1", => {
+		show
+		animateAndWait "bg"
+		animate "bg_snow", true
+	}
+}

@@ -1,0 +1,278 @@
+import (
+    "fmt"
+    "math"
+    "math/rand"
+    "time"
+)
+
+// Point 表示二维坐标点
+type Point struct {
+    X, Y float64
+}
+
+// MovementConfig 运动配置
+type MovementConfig struct {
+    MinSpeed      float64
+    MaxSpeed      float64
+    JumpProb      float64 // 跳跃概率
+    DirectionProb float64 // 改变方向概率
+    BaseY         float64 // 基础Y坐标（地面）
+    MaxJumpHeight float64
+    Gravity       float64
+}
+
+// DefaultConfig 默认配置
+func DefaultConfig() *MovementConfig {
+    return &MovementConfig{
+        MinSpeed:      10.0,
+        MaxSpeed:      25.0,
+        JumpProb:      0.1, // 每帧2%的概率跳跃
+        DirectionProb: 0.25, // 15%的概率改变方向
+        BaseY:         -80.0,
+        MaxJumpHeight: 100.0,
+        Gravity:       9.8,
+    }
+}
+
+// RandomMovementGenerator 随机运动生成器
+type RandomMovementGenerator struct {
+    config     *MovementConfig
+    currentPos Point
+    velocity   float64
+    direction  int // 1: 右, -1: 左, 0: 停止
+    jumpCount  int
+    lastChange int
+}
+
+// NewRandomMovementGenerator 创建新的运动生成器
+func NewRandomMovementGenerator(initialX, initialY float64) *RandomMovementGenerator {
+    cfg := DefaultConfig()
+    return &RandomMovementGenerator{
+        config:     cfg,
+        currentPos: Point{X: initialX, Y: initialY},
+        velocity:   cfg.MinSpeed + rand.Float64()*(cfg.MaxSpeed-cfg.MinSpeed),
+        direction:  1,
+    }
+}
+
+// GenerateMovement 生成下一帧的移动
+func (rmg *RandomMovementGenerator) GenerateMovement(dt float64) Point {
+    // 随机改变方向和速度
+    rmg.maybeChangeDirection()
+
+    // 更新水平位置
+    rmg.currentPos.X += rmg.velocity * float64(rmg.direction) * dt
+
+    // 边界检测
+    if rmg.currentPos.X < -200 {
+        rmg.currentPos.X = -200
+        rmg.direction = 1
+    }
+
+	 if rmg.currentPos.X > 200 {
+        rmg.currentPos.X = 200
+        rmg.direction = -1
+    }
+
+    // 随机跳跃
+    // if rand.Float64() < rmg.config.JumpProb {
+    //  rmg.executeJump()
+    // }
+
+    // 地面检测
+    if rmg.currentPos.Y > rmg.config.BaseY {
+        rmg.currentPos.Y = rmg.config.BaseY
+    }
+
+    return rmg.currentPos
+}
+
+// maybeChangeDirection 随机改变移动方向和速度
+func (rmg *RandomMovementGenerator) maybeChangeDirection() {
+    if rand.Float64() < rmg.config.DirectionProb {
+        rmg.direction = rmg.generateRandomDirection()
+    }
+
+    // 随机改变速度
+    if rand.Float64() < 0.2 { // 20%的概率改变速度
+        rmg.velocity = rmg.config.MinSpeed + rand.Float64()*(rmg.config.MaxSpeed-rmg.config.MinSpeed)
+    }
+}
+
+// generateRandomDirection 生成随机方向
+func (rmg *RandomMovementGenerator) generateRandomDirection() int {
+    // 随机选择方向：左、右或暂停
+    r := rand.Intn(100)
+    switch {
+    case r < 40: // 40%概率向右
+        return 1
+    case r < 80: // 40%概率向左
+        return -1
+    default: // 20%概率暂停
+        return 0
+    }
+}
+
+// executeJump 执行跳跃动作
+func (rmg *RandomMovementGenerator) executeJump() {
+    // 随机跳跃高度
+    jumpHeight := rmg.config.MaxJumpHeight * (0.3 + 0.7*rand.Float64())
+    // 简单模拟跳跃，直接更新Y值
+    rmg.currentPos.Y -= jumpHeight
+    if rmg.currentPos.Y < rmg.config.BaseY-jumpHeight {
+        rmg.currentPos.Y = rmg.config.BaseY - jumpHeight
+    }
+}
+
+// GenerateJumpTrajectory 生成跳跃轨迹
+func (rmg *RandomMovementGenerator) GenerateJumpTrajectory(startX, startY float64, frames int) []Point {
+    trajectory := make([]Point, frames)
+    
+    // 使用抛物线模拟跳跃 - 修正后的公式
+    peakHeight := rmg.config.MaxJumpHeight * (0.7 + 0.3*rand.Float64())
+    
+    for i := 0; i < frames; i++ {
+        t := float64(i) / float64(frames-1) // t从0到1
+        
+        // 标准抛物线公式: y = -4h(t-0.5)² + h
+        // 这样在t=0和t=1时y=0，在t=0.5时y=peakHeight
+        jumpOffset := 4 * peakHeight * math.Pow(t-0.5, 2) - peakHeight
+        
+        x := startX + 2.0*t // 轻微的水平移动
+        y := startY - jumpOffset // 向上跳跃（Y值减小）
+        
+        // 落地检测：确保不会穿透地面
+        // 假设地面在 config.BaseY，角色不能跳到地面以下
+        if y < rmg.config.BaseY {
+            y = rmg.config.BaseY
+        }
+        
+        trajectory[i] = Point{
+            X: x,
+            Y: y,
+        }
+    }
+    
+    return trajectory
+}
+
+// 高级版本：带物理引擎的智能随机移动
+type AdvancedMovementEngine struct {
+    currentPos   Point
+    movementMode int // 0: 正常移动, 1: 跳跃
+}
+
+// 使用贝塞尔曲线生成平滑运动轨迹
+func generateBezierTrajectory(start, control, end Point, steps int) []Point {
+    points := make([]Point, steps)
+
+    for i := 0; i < steps; i++ {
+        t := float64(i) / float64(steps)
+        // 二次贝塞尔曲线公式
+        x := math.Pow(1-t, 2)*start.X + 2*(1-t)*t*control.X + math.Pow(t, 2)*end.X
+        y := math.Pow(1-t, 2)*start.Y + 2*(1-t)*t*control.Y + math.Pow(t, 2)*end.Y
+
+        points[i] = Point{X: x, Y: y}
+    }
+
+    return points
+}
+
+// 生成一个复杂运动序列，包含随机移动和跳跃
+func generateComplexMovementSequence(start Point, totalFrames int) []Point {
+    positions := make([]Point, 0, totalFrames)
+    movementGen := NewRandomMovementGenerator(start.X, start.Y)
+
+    i := 0
+    for i < totalFrames {
+        // 生成随机移动
+        pos := movementGen.GenerateMovement(1.0 / 20.0)
+        positions = append(positions, pos)
+
+        // 随机插入跳跃轨迹
+        if rand.Float64() < 0.08 { // 8%的概率插入跳跃序列
+            jumpFrames := 10 + rand.Intn(20) // 10-30帧的跳跃动作
+            if rand.Float64() < 0.1 { // 10%的概率较大幅度跳跃
+                jumpTrajectory := movementGen.GenerateJumpTrajectory(pos.X, pos.Y, jumpFrames)
+                for j := 0; j < len(jumpTrajectory) && i < totalFrames; j++ {
+                    positions = append(positions, jumpTrajectory[j])
+                    i++
+                }
+                continue // 跳过本帧正常移动
+            }
+        }
+        i++
+    }
+    return positions
+}
+
+onStart => {
+	hide
+	onMsg "start", => {
+		show
+		setLayer Front
+		for i := 0; i < 13; i++ {
+			animate "ride", true
+			x, y := xpos, ypos
+			glide x+60, y, 0.7
+			// newx := x + 60
+			//setXpos newx
+		}
+        setXYpos 800, -170
+		stopAnimation "ride"
+		stopPlaying "大气磅礴的开场音乐2"
+		broadcast "start_case1"
+	}
+
+	onMsg "start_case1", => {
+		setSize 10*size
+		wait 0.05
+		wait 3.5
+		show
+		setXYpos -130, -170
+		setLayer Front
+		print("huozhanbai:", size)
+
+		// 跟随镜头移动
+		setCostume "持剑迎击1"
+		for i := 0; i < 10; i++ {
+			x, y := xpos, ypos
+			glide x, y+9, 0.05
+		}
+
+		wait 1
+
+		//wait 1
+		play "刀剑打斗金属声音", true
+    	// 生成100帧的移动序列
+		start := Point{-130,-80}
+		print("start positions:", start)
+		points := generateComplexMovementSequence(start, 300)
+    	for i := 0; i < 300; i++ {
+			animate "fight", true
+			
+			newPos := points[i]
+			
+			fmt.Printf("帧 %d: (%.2f, %.2f)\n", i, newPos.X, newPos.Y)
+			glide newPos.X, newPos.Y, 0.05
+			// 模拟高帧率
+			// time.Sleep(time.Millisecond * 50)
+    	}
+
+		/*
+		for i := 0; i < 30; i++ {
+			animate "fight", true
+			x, y := xpos, ypos
+			glide x+0.2, y, 0.5
+		}
+		*/
+		stopPlaying "刀剑打斗金属声音"
+		stopAnimation "fight"
+		setCostume "攻击定格"
+		play "环境音风雪低沉的呼啸声极度静谧感"
+		wait 1
+		hide
+		// setSize size/8
+		broadcast "start_case2"
+	}
+}

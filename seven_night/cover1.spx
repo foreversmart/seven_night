@@ -1,0 +1,33 @@
+onStart => {
+	show
+	setLayer Front
+	play "大气磅礴的开场音乐2", true
+	// case 1
+	wait 5
+	effect := 0.0
+	//isStart := false
+	repeat 128, => {
+		if effect < 40 {
+			setGraphicEffect GhostEffect, effect
+			effect = effect + 5
+			wait 0.1
+			return
+		}
+
+		// if effect > 70 && !isStart {
+		// 	isStart = true
+
+		// }
+
+		setGraphicEffect GhostEffect, effect
+		effect = effect + 0.5
+		print(effect)
+		wait 0.01
+	}
+
+	broadcast "start"
+	print("start")
+
+	hide
+
+}

@@ -1,0 +1,14 @@
+onStart => {
+	hide
+	onMsg "start_case4", => {
+		show
+        setLayer Front
+        playAndWait "动不了"
+        playAndWait "这是摄魂"
+		animate "animation"
+        playAndWait "志在必得"
+		hide
+		broadcast "start_case5"
+	}
+
+}

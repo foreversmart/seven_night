@@ -1,0 +1,17 @@
+onStart => {
+	hide
+	onMsg "start_case5", => {
+		show
+        setLayer Front
+		play "别了"
+		stopPlaying "音效心跳突然放大的咚一声"
+		animate "animation"
+		wait 4
+		playAndWait "qiushuiyin从没认识过你"
+		wait 1
+		hide
+		broadcast "start_case6"
+	}
+
+}
+

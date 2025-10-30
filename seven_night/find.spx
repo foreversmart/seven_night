@@ -1,0 +1,10 @@
+onStart => {
+	hide
+	onMsg "start_case8", => {
+		show
+		play "音乐舒缓悲伤的钢琴或箫声", true
+		animateAndWait "animation"
+		broadcast "start_case9"
+	}
+
+}

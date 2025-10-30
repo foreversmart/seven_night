@@ -1,0 +1,10 @@
+onStart => {
+    hide
+	setLayer Front
+	onMsg "start_case9", => {
+		show
+        playAndWait "绿儿小姐他快死了"
+        playAndWait "抬回谷里"
+        playAndWait "走吧"
+	}
+}
