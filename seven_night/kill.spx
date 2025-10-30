@@ -3,10 +3,32 @@ onStart => {
 	onMsg "start_case6", => {
 		show
         setLayer Front
-        play "音效雪鹞尖利的叫声扑翅声"
-		animateAndWait "animation"
+		animate "animation"
+		playAndWait "音效雪鹞尖利的叫声扑翅声"
+		wait 8
+		playAndWait "kill"
+		wait 4
+		effect := 0.0
+        isStart := false
+        repeat 128, => {
+            if effect < 40 {
+                setGraphicEffect GhostEffect, effect
+                effect = effect + 5
+                wait 0.1
+                return
+            }
+
+             if effect > 60 && !isStart {
+             	isStart = true
+				broadcast "start_case7"
+            }
+
+            setGraphicEffect GhostEffect, effect
+            effect = effect + 0.5
+            wait 0.01
+        }
+
 		hide
-		broadcast "start_case7"
 	}
 
 }

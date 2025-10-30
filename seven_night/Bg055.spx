@@ -2,6 +2,7 @@ onStart => {
 	hide
 	onMsg "start_case1", => {
 		show
+		play "环境音风雪低沉的呼啸声极度静谧感"
 		animateAndWait "bg"
 		animate "bg_snow", true
 	}

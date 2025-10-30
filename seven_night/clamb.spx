@@ -4,8 +4,11 @@ onStart => {
 		show
         setLayer Front
         play "雪地脚步声", true
+        
 		animate "animation"
-        wait 13
+        wait 2
+        play "win"
+        wait 11
         stopPlaying "雪地脚步声"
 
         effect := 0.0
@@ -18,7 +21,7 @@ onStart => {
                 return
             }
 
-            if effect > 70 && !isStart {
+            if effect > 60 && !isStart {
              	isStart = true
                 broadcast "start_case8"
             }

@@ -211,6 +211,7 @@ onStart => {
 	onMsg "start", => {
 		show
 		setLayer Front
+        play "ride", true
 		for i := 0; i < 13; i++ {
 			animate "ride", true
 			x, y := xpos, ypos
@@ -220,6 +221,7 @@ onStart => {
 		}
         setXYpos 800, -170
 		stopAnimation "ride"
+        stopPlaying "ride"
 		stopPlaying "大气磅礴的开场音乐2"
 		broadcast "start_case1"
 	}
